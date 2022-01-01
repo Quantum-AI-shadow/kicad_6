@@ -1,54 +1,63 @@
+import wx
 import pcbnew
-from pcbnew import *
+import os
 
-board = pcbnew.GetBoard()
-
-def get_component(name):
-    return [x for x in board.GetModules() if x.GetReference() == name][0]
-
-def getnetID(netName):
-    nets    = board.GetNetsByName()
-    netCode = nets.find(netName).value()[1].GetNet()
-    return netCode
+def getNetID(netName):
+    board = pcbnew.GetBoard()
+    try:
+       return board.GetNetcodeFromNetname(netName)
+    except:
+        return
 
 def getLayerID(layerName):
-    for i in range(pcbnew.PCB_LAYER_ID_COUNT):
+    board = pcbnew.GetBoard()
+    for i in range(1000):
         if(board.GetLayerName(i) == layerName):
-            layerID = i
-            return layerID
+            return i
+    return
 
-def addVia(x, y, drill, width, netName, refresh = 1):
-    newVia = pcbnew.VIA(board)
-    newVia.SetPosition(pcbnew.wxPoint(x*1e6, y*1e6))
-    newVia.SetDrill(int(drill*1e6))
-    newVia.SetWidth(int(width*1e6))
-    newVia.SetNetCode(getnetID(netName))
-    board.Add(newVia)
-    if(refresh == 1):
-        pcbnew.Refresh()
-
-def addTrack(x1, y1, x2, y2, trackWidth, netName, layerName, refresh = 1):
-    track = pcbnew.TRACK(board)
-    track.SetStart(pcbnew.wxPoint(int(x1*1e6), int(y1*1e6)))
-    track.SetEnd(pcbnew.wxPoint(int(x2*1e6), int(y2*1e6)))
-    track.SetNetCode(getnetID(netName))
-    track.SetLayer(getLayerID(layerName))
-    board.Add(track)
-    if(refresh == 1):
-        pcbnew.Refresh()
-
-def addZone(points, layerName, netName, padConnection, refresh = 1): #padConnection is thermal/solid
-    zone = pcbnew.ZONE_CONTAINER(board)
-    nets = board.GetNetsByName()
-    netCode = nets.find(netName).value()[1].GetNet()
-    zone.SetNetCode(netCode)
-    zone.SetTimeStamp(420)
-    zone.SetLayer(getLayerID(layerName))
-    zone.SetPadConnection(padConnection)
+def addZone(points, layerName, netName, clearance = 0.5, refresh = 1): 
+    board = pcbnew.GetBoard()
+    zone = pcbnew.ZONE(board)
+    zone.SetLayer(0)
     wx_vector = pcbnew.wxPoint_Vector(0)
     for point in points:
         pcbnew.wxPoint_Vector.append(wx_vector, pcbnew.wxPoint(point[0]*1e6, point[1]*1e6))
     zone.AddPolygon(wx_vector)
+    zone.SetNetCode(getNetID(netName))
+    zone.SetLayer(getLayerID(layerName))
+    zone.SetLocalClearance(int(clearance*1e6))
     board.Add(zone)
     if(refresh == 1):
         pcbnew.Refresh()
+
+def addVia(pos, width, drill, netName, refresh = 1):
+    board = pcbnew.GetBoard()
+    via = pcbnew.PCB_VIA(board)
+    via.SetPosition(pcbnew.wxPoint(int(pos[0]*1e6), int(pos[1]*1e6)))
+    via.SetDrill(int(drill*1e6))
+    via.SetWidth(int(width*1e6))
+    via.SetNetCode(getNetID(netName))
+    board.Add(via)
+    if(refresh == 1):
+        pcbnew.Refresh()
+
+def addTrack(start, end, layerName, netName, width, refresh = 1):
+    board = pcbnew.GetBoard()
+    track = pcbnew.PCB_TRACK(board)
+    track.SetStart(pcbnew.wxPoint(start[0]*1e6, start[1]*1e6))
+    track.SetEnd(pcbnew.wxPoint(end[0]*1e6, end[1]*1e6))
+    track.SetLayer(getLayerID(layerName))
+    track.SetNetCode(getNetID(netName))
+    track.SetWidth(int(width*1e6))
+    board.Add(track)
+    if(refresh == 1):
+        pcbnew.Refresh()
+
+def getNetNames():
+    board = pcbnew.GetBoard()
+    netNames = []
+    for i in board.GetNetsByName():
+        netNames.append(i)
+    return netNames
+
