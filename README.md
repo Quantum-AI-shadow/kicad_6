@@ -4,7 +4,7 @@
 
 This is a plugin to import dxf file to copper layer as copper zones. Also it will add circle as via in board.
 
-## codes: This folder contains functions for KiCAD 6
+## code: This folder contains functions for KiCAD 6
 
 fun.py - This has few functions to help scripting.
 
