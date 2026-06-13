@@ -1,5 +1,7 @@
 # kicad_6
 
+For kicad 10 => [GitHub Link](https://github.com/Quantum-AI-shadow/kicad_10)
+
 ## dxf_import
 
 This is a plugin to import dxf file to copper layer as copper zones. Also it will add circle as via in board.
